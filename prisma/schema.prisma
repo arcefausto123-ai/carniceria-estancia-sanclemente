@@ -1,0 +1,373 @@
+// Estancia San Clemente — modelo de datos
+// Motor: PostgreSQL (Supabase)
+//
+// Nota sobre dinero: TODOS los importes se guardan como enteros en CENTAVOS de ARS.
+// $47.450 se guarda como 4745000. Nunca usamos float para plata.
+//
+// Nota sobre stock: cada envase es una unidad individual con su peso exacto.
+// Un Product representa un envase concreto (ej. "Entraña 0,850 kg") y su stock
+// es la cantidad de envases equivalentes disponibles.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------- catálogo
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  highlight   String? // "Texto destacado" que se muestra en la portada
+  icon        String    @default("tag") // clave del ícono (beef, pork, chicken, box, tag)
+  coverImage  String?
+  visible     Boolean   @default(true)
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([position])
+}
+
+enum ProductStatus {
+  PUBLISHED
+  DRAFT
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  sku         String? // "código interno", opcional
+  name        String
+  description String?
+  image       String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  // Cada envase se carga con su peso exacto y su precio final ya calculado.
+  weightGrams Int // 850 = 0,850 kg — entero para evitar errores de redondeo
+  priceCents  Int // precio final del envase, en centavos
+
+  stock             Int           @default(0) // envases disponibles
+  lowStockThreshold Int           @default(2)
+  status            ProductStatus @default(DRAFT)
+
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([categoryId, status])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------- carrito
+
+// El carrito vive en la base para poder reservar stock por N minutos
+// (parámetro configurable en Settings.stockHoldMinutes).
+model Cart {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  expiresAt DateTime // se corre hacia adelante en cada modificación
+  orderId   String?    @unique
+  order     Order?     @relation(fields: [orderId], references: [id])
+  items     CartItem[]
+
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int     @default(1)
+
+  @@unique([cartId, productId])
+}
+
+// ---------------------------------------------------------------- clientes
+
+model Customer {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  phone     String   @unique // normalizado a solo dígitos, con código de país
+  email     String?
+  notes     String? // nota interna del negocio
+  tags      String[] @default([]) // "frecuente", "prefiere-retiro", ...
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+
+  @@index([lastName, firstName])
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  street       String
+  number       String
+  apartment    String?
+  locality     String
+  postalCode   String
+  instructions String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([customerId])
+}
+
+// ---------------------------------------------------------------- pedidos
+
+enum DeliveryMethod {
+  SHIPPING // envío a domicilio
+  PICKUP // retiro en el local
+}
+
+enum PaymentMethod {
+  CASH_ON_PICKUP // efectivo al retirar (requiere seña)
+  BANK_TRANSFER // transferencia por el 100%
+}
+
+enum OrderStatus {
+  NEW // Nuevo
+  PAYMENT_PENDING // Pago pendiente
+  CONFIRMED // Confirmado (comprobante validado)
+  PREPARING // En preparación
+  READY // Listo
+  DELIVERED // Entregado
+  CANCELLED // Cancelado
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  code   String      @unique // ESC-1048
+  status OrderStatus @default(NEW)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // Datos de contacto congelados al momento de la compra
+  contactFirstName String
+  contactLastName  String
+  contactPhone     String
+  contactEmail     String?
+
+  deliveryMethod DeliveryMethod
+  // Envío a domicilio
+  street         String?
+  number         String?
+  apartment      String?
+  locality       String?
+  postalCode     String?
+  instructions   String?
+  shippingZoneId String?
+  shippingZone   ShippingZone?  @relation(fields: [shippingZoneId], references: [id])
+  // Común a envío y retiro
+  slotLabel      String? // "12:00–14:00"
+  scheduledFor   DateTime?
+
+  paymentMethod PaymentMethod
+  subtotalCents Int
+  shippingCents Int           @default(0)
+  totalCents    Int
+  depositPct    Int           @default(30) // congelado del setting al crear el pedido
+  depositCents  Int           @default(0) // lo que hay que pagar ahora
+  balanceCents  Int           @default(0) // lo que queda para el retiro
+
+  routePosition Int? // orden en la ruta del día
+  internalNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items    OrderItem[]
+  payments Payment[]
+  events   OrderEvent[]
+  cart     Cart?
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  // Snapshot: el producto puede cambiar de precio o borrarse después
+  name        String
+  image       String?
+  weightGrams Int
+  priceCents  Int
+  quantity    Int     @default(1)
+  prepared    Boolean @default(false) // checklist de preparación
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type      String // "status", "note", "payment"
+  message   String
+  author    String   @default("sistema")
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+// ---------------------------------------------------------------- pagos
+
+enum PaymentKind {
+  DEPOSIT // seña 30%
+  FULL // pago total
+  BALANCE // saldo cobrado en el local
+}
+
+enum PaymentStatus {
+  PENDING // comprobante subido, esperando validación manual
+  APPROVED
+  REJECTED
+}
+
+// La validación es 100% manual: el cliente informa los datos de la
+// transferencia y un humano aprueba o rechaza desde el panel.
+model Payment {
+  id      String        @id @default(cuid())
+  orderId String
+  order   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind    PaymentKind
+  status  PaymentStatus @default(PENDING)
+
+  expectedCents Int // lo que esperábamos cobrar
+  reportedCents Int? // lo que el cliente dice que transfirió
+
+  // Datos declarados de la transferencia
+  senderName       String?
+  senderTaxId      String? // CUIT/CUIL
+  sourceAlias      String?
+  destinationAlias String?
+  operationId      String?
+  receiptNumber    String?
+  receiptImage     String? // URL en Supabase Storage
+  transferredAt    DateTime?
+
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------- logística
+
+model ShippingZone {
+  id            String   @id @default(cuid())
+  name          String // "Loma Verde"
+  feeCents      Int // tarifa de envío
+  minOrderCents Int      @default(0) // pedido mínimo para esa zona
+  active        Boolean  @default(true)
+  position      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([position])
+}
+
+enum SlotKind {
+  DELIVERY
+  PICKUP
+}
+
+model TimeSlot {
+  id       String   @id @default(cuid())
+  kind     SlotKind
+  label    String // "12:00–14:00"
+  active   Boolean  @default(true)
+  position Int      @default(0)
+
+  @@index([kind, position])
+}
+
+// ---------------------------------------------------------------- config
+
+// Fila única (id = "singleton"). Todo lo que el negocio puede cambiar
+// sin tocar código vive acá.
+model Settings {
+  id String @id @default("singleton")
+
+  businessName String  @default("Estancia San Clemente")
+  logoUrl      String?
+  whatsapp     String  @default("")
+  email        String  @default("")
+  address      String  @default("")
+  instagram    String  @default("")
+  facebook     String  @default("")
+  tagline      String  @default("Cortes seleccionados de la mejor calidad.")
+
+  // Reglas de pedidos — configurables, nunca hardcodeadas
+  stockHoldMinutes Int     @default(10)
+  depositPct       Int     @default(30)
+  minOrderCents    Int     @default(2000000)
+  shippingEnabled  Boolean @default(true)
+  pickupEnabled    Boolean @default(true)
+  hideOutOfStock   Boolean @default(true)
+
+  // Datos bancarios para las transferencias
+  bankAlias  String @default("")
+  bankHolder String @default("")
+  bankTaxId  String @default("")
+  bankCbu    String @default("")
+
+  // Mensajes automáticos (semiautomáticos: el panel arma el texto y
+  // abre WhatsApp con un clic)
+  notifyOnNewOrder  Boolean @default(true)
+  notifyOnPaymentOk Boolean @default(true)
+  notifyOnReady     Boolean @default(true)
+  msgNewOrder       String  @default("")
+  msgPaymentOk      String  @default("")
+  msgReady          String  @default("")
+
+  updatedAt DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+model Counter {
+  name  String @id
+  value Int
+}

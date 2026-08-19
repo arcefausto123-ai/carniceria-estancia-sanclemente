@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Estancia San Clemente — sistema de diseño
+   Tienda: azul marino + crema + dorado, títulos serif.
+   Panel:  azul de trabajo sobre gris claro, misma familia serif.
+   ============================================================ */
+
+@theme {
+  /* Marca */
+  --color-navy-950: #071a30;
+  --color-navy-900: #0b2140;
+  --color-navy-800: #102c4f;
+  --color-navy-700: #163a63;
+  --color-navy-600: #1d4a7a;
+  --color-navy: #0f2b4c;
+
+  /* Crema y arena */
+  --color-cream-50: #fdfbf7;
+  --color-cream-100: #faf6ee;
+  --color-cream-200: #f4ecdd;
+  --color-cream-300: #ebdfc9;
+  --color-sand: #efe4d0;
+
+  /* Dorado / bronce (subrayados y detalles) */
+  --color-gold-400: #d9b877;
+  --color-gold-500: #c39a52;
+  --color-gold-600: #a8813d;
+
+  /* Panel administrativo */
+  --color-admin-bg: #f6f7f9;
+  --color-admin-blue: #1668c8;
+  --color-admin-blue-dark: #1257a8;
+  --color-ink-900: #10233c;
+  --color-ink-700: #35475e;
+  --color-ink-500: #64748b;
+  --color-ink-300: #cbd5e1;
+  --color-ink-200: #e2e8f0;
+  --color-ink-100: #eef2f6;
+
+  /* Semánticos (badges de estado) */
+  --color-ok-bg: #e7f5ec;
+  --color-ok-fg: #1a7f45;
+  --color-warn-bg: #fdeedd;
+  --color-warn-fg: #a75d10;
+  --color-danger-bg: #fdeaea;
+  --color-danger-fg: #b4232a;
+  --color-info-bg: #e8eef7;
+  --color-info-fg: #1a4b85;
+
+  --font-serif: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-ink-200);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink-900);
+    background: var(--color-cream-100);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .serif {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* El foco por defecto de Tailwind desaparece sobre el azul marino. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* --- Tienda --- */
+
+  .btn-navy {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-6 py-3
+           text-sm font-medium text-white transition hover:bg-navy-800
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-outline-navy {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/30
+           bg-white px-6 py-3 text-sm font-medium text-navy transition
+           hover:border-navy hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost-light {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/40
+           px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10;
+  }
+
+  .shop-card {
+    @apply rounded-lg border border-navy/10 bg-white;
+  }
+
+  /* Filete dorado bajo los títulos de la tienda */
+  .rule-gold::after {
+    content: "";
+    @apply mt-3 block h-[3px] w-14 rounded-full bg-gold-500;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-navy/15 bg-white px-4 py-3 text-sm text-ink-900
+           placeholder:text-ink-500 focus:border-navy focus:outline-none;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-xs font-medium text-ink-700;
+  }
+
+  /* --- Panel --- */
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-admin-blue px-4 py-2.5
+           text-sm font-medium text-white transition hover:bg-admin-blue-dark
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ink-200
+           bg-white px-4 py-2.5 text-sm font-medium text-ink-700 transition
+           hover:border-ink-300 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-approve {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ok-fg/30
+           bg-ok-bg px-3 py-1.5 text-xs font-medium text-ok-fg transition hover:bg-ok-fg hover:text-white;
+  }
+
+  .btn-reject {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-danger-fg/30
+           bg-danger-bg px-3 py-1.5 text-xs font-medium text-danger-fg transition
+           hover:bg-danger-fg hover:text-white;
+  }
+
+  .panel {
+    @apply rounded-xl border border-ink-200 bg-white;
+  }
+
+  .panel-title {
+    @apply font-serif text-lg text-ink-900;
+  }
+
+  .admin-field {
+    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900
+           placeholder:text-ink-500 focus:border-admin-blue focus:outline-none;
+  }
+
+  .admin-label {
+    @apply mb-1.5 block text-xs font-medium text-ink-700;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap;
+  }
+
+  .th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-ink-500;
+  }
+
+  .td {
+    @apply px-4 py-3.5 text-sm text-ink-700;
+  }
+
+  .row-hover {
+    @apply transition-colors hover:bg-ink-100/60;
+  }
+}
+
+@layer utilities {
+  /* Textura sutil de papel en el fondo de la tienda */
+  .paper {
+    background-color: var(--color-cream-100);
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgb(15 43 76 / 0.035) 1px,
+      transparent 0
+    );
+    background-size: 22px 22px;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
