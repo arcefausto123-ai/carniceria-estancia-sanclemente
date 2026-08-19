@@ -47,15 +47,29 @@ Al tocar la tienda, respetá esto:
 
 ## Logo
 
-El logo oficial (`public/logo.png`) es **blanco sobre fondo transparente**:
-sólo se lee sobre fondo oscuro. Todo lugar donde se renderice `<Logo>` tiene
-que darle un fondo navy. Ojo con la barra superior del panel, que es blanca:
-ahí el logo lleva su propia pastilla navy.
+El logo oficial es **blanco sobre fondo transparente**: sólo se lee sobre
+fondo oscuro. Todo lugar donde se renderice `<Logo>` tiene que darle un fondo
+navy. Ojo con la barra superior del panel, que es blanca: ahí el logo lleva su
+propia pastilla navy.
 
 La bajada de la marca es **"SABEMOS DE CARNE"**.
 
 Si hace falta el logo sobre crema o blanco, se pide una variante en tinta
 oscura del archivo. Un filtro CSS no alcanza.
+
+Archivos, todos derivados de `public/logo-original.png`:
+
+| Archivo | Uso |
+|---|---|
+| `public/logo-original.png` | Lo que entregó el cliente. No se toca. |
+| `public/logo.png` | Recortado al contenido. Es el que usa `<Logo>`. |
+| `src/app/favicon.ico` | Pestaña: 16/32/48 px. |
+| `src/app/icon.png` | 512 px. |
+| `src/app/apple-icon.png` | 180 px, pantalla de inicio de iOS. |
+
+Se regeneran con `python3 scripts/generate-icons.py` (necesita `pillow`).
+Los tamaños chicos **no** usan el lettering: a 16 px queda ilegible, así que
+llevan una "E" con los dos puntos de la marca. El de iOS sí lo usa entero.
 
 ## Paleta
 
