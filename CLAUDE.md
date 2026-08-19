@@ -45,6 +45,18 @@ Al tocar la tienda, respetá esto:
 - Estilos con las clases de `globals.css` (`btn-navy`, `panel`, `admin-field`,
   `badge`, `th`, `td`). No repitas cadenas largas de utilidades.
 
+## Logo
+
+El logo oficial (`public/logo.png`) es **blanco sobre fondo transparente**:
+sólo se lee sobre fondo oscuro. Todo lugar donde se renderice `<Logo>` tiene
+que darle un fondo navy. Ojo con la barra superior del panel, que es blanca:
+ahí el logo lleva su propia pastilla navy.
+
+La bajada de la marca es **"SABEMOS DE CARNE"**.
+
+Si hace falta el logo sobre crema o blanco, se pide una variante en tinta
+oscura del archivo. Un filtro CSS no alcanza.
+
 ## Paleta
 
 - Tienda: azul marino `--color-navy` (#0f2b4c), crema `--color-cream-*`,

@@ -48,8 +48,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Barra superior */}
         <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-ink-200 bg-white px-5 py-3">
-          <Link href="/admin" className="lg:hidden">
-            <Logo src={settings.logoUrl} className="h-9 w-auto text-navy" />
+          {/* La barra es blanca y el logo oficial es blanco: necesita
+              su propio fondo navy para verse. */}
+          <Link href="/admin" className="rounded-lg bg-navy px-2 py-1.5 lg:hidden">
+            <Logo src={settings.logoUrl} className="h-8 w-auto" />
           </Link>
 
           <form action="/admin/pedidos" className="relative hidden max-w-md flex-1 sm:block">
