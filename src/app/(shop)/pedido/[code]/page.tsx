@@ -248,7 +248,7 @@ export default async function OrderPage({
         {!showTracking && (
           <Link
             href="/"
-            className="mt-5 block text-center text-sm text-navy underline underline-offset-4"
+            className="mt-4 block py-2 text-center text-sm text-navy underline underline-offset-4"
           >
             Volver al inicio
           </Link>

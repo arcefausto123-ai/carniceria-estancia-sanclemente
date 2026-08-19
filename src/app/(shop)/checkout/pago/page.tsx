@@ -50,7 +50,7 @@ export default async function CheckoutPaymentPage() {
 
             <Link
               href="/checkout/datos"
-              className="mt-9 flex items-center gap-2 text-sm text-navy hover:text-gold-600"
+              className="mt-8 -mb-2 flex items-center gap-2 p-2 text-sm text-navy hover:text-gold-600"
             >
               <ArrowLeft className="h-4 w-4" />
               Volver a datos y entrega

@@ -28,8 +28,8 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <nav className="text-sm text-ink-500">
-        <Link href="/" className="hover:text-navy">
+      <nav className="flex items-center text-sm text-ink-500">
+        <Link href="/" className="-my-2 py-2 hover:text-navy">
           Inicio
         </Link>
         <span className="mx-2">&gt;</span>
@@ -57,16 +57,20 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
               {cart.items.map((item) => {
                 const max = stock.get(item.id) ?? item.quantity;
                 return (
-                  <li key={item.id} className="flex items-center gap-4 py-5 first:pt-0">
+                  // En celular la fila se parte: foto + datos arriba, controles
+                  // abajo a lo ancho. `flex-wrap` hace que el tercer bloque baje solo.
+                  <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 py-5 first:pt-0">
                     <ProductImage
                       src={item.product.image}
                       alt={item.product.name}
-                      className="h-24 w-32 shrink-0 rounded"
+                      className="h-24 w-24 shrink-0 rounded sm:w-32"
                       iconClassName="h-8 w-8"
                     />
 
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate font-serif text-xl text-navy">{item.product.name}</h2>
+                      <h2 className="font-serif text-lg break-words text-navy sm:truncate sm:text-xl">
+                        {item.product.name}
+                      </h2>
                       <p className="mt-1 text-sm text-ink-500">
                         {formatWeight(item.product.weightGrams)}
                       </p>
@@ -80,7 +84,8 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
                       )}
                     </div>
 
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex w-full items-center justify-between gap-3
+                                    sm:w-auto sm:flex-col sm:justify-center sm:gap-2">
                       <div className="flex items-center rounded-full border border-navy/20 bg-white">
                         <QuantityButton
                           itemId={item.id}
@@ -89,7 +94,7 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
                         >
                           −
                         </QuantityButton>
-                        <span className="w-12 border-x border-navy/20 py-2 text-center text-sm text-navy">
+                        <span className="w-12 border-x border-navy/20 py-2.5 text-center text-sm text-navy">
                           {item.quantity}
                         </span>
                         <QuantityButton
@@ -105,7 +110,8 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
                         <input type="hidden" name="itemId" value={item.id} />
                         <button
                           type="submit"
-                          className="text-xs text-ink-500 underline underline-offset-2 hover:text-navy"
+                          className="-m-2 p-2 text-sm text-ink-500 underline underline-offset-2
+                                     hover:text-navy sm:text-xs"
                         >
                           Eliminar
                         </button>
@@ -160,7 +166,7 @@ export default async function CartPage({ searchParams }: { searchParams: SearchP
             </Link>
             <Link
               href="/"
-              className="mt-4 block text-center text-sm text-navy underline underline-offset-4"
+              className="mt-2 block py-2 text-center text-sm text-navy underline underline-offset-4"
             >
               Seguir comprando
             </Link>
@@ -209,7 +215,7 @@ function QuantityButton({
         type="submit"
         aria-label={label}
         disabled={disabled}
-        className="px-3.5 py-2 text-lg leading-none text-navy transition hover:text-gold-600
+        className="px-4 py-3 text-lg leading-none text-navy transition hover:text-gold-600
                    disabled:cursor-not-allowed disabled:opacity-30"
       >
         {children}

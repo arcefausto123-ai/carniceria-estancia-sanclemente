@@ -186,7 +186,7 @@ function MethodCard({
         checked={checked}
         disabled={disabled}
         onChange={onSelect}
-        className="h-4 w-4 accent-navy"
+        className="h-5 w-5 shrink-0 accent-navy"
       />
       <span className="text-navy">{icon}</span>
       <span className="text-[15px] text-navy">{label}</span>

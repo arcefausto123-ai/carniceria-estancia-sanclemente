@@ -17,6 +17,23 @@ Next.js 16 (App Router) · TypeScript · Tailwind 4 · Prisma · PostgreSQL (Sup
 - **WhatsApp es semiautomático.** El panel arma el texto y abre `wa.me`.
   Toda la lógica vive en `src/lib/whatsapp.ts`.
 
+## Mobile
+
+La tienda del cliente es **mobile-first**: es el uso principal. El panel
+administrativo es de escritorio y no hace falta optimizarlo para celular.
+
+Al tocar la tienda, respetá esto:
+
+- Los campos de texto van en **16px como mínimo** en celular (`.field` ya usa
+  `text-base sm:text-sm`). Por debajo de 16px, Safari de iOS hace zoom solo al
+  enfocar el campo.
+- Nada puede desbordar a lo ancho. Si una fila no entra, partila con
+  `flex-wrap` y un bloque `w-full sm:w-auto`, como hace el carrito.
+- Los botones y enlaces tocables necesitan ~44px de alto. Para enlaces de
+  texto sueltos, `-m-2 p-2` agranda el área sin mover el diseño.
+- Los radios van dentro de `<label>` que envuelve toda la tarjeta: el dedo
+  toca la tarjeta, no el círculo de 20px.
+
 ## Convenciones
 
 - Server Components por defecto; `"use client"` sólo donde hay interacción.

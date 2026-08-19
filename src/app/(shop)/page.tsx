@@ -165,12 +165,12 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
                     {canAdd ? (
                       <form action={addToCart} className="mt-3">
                         <input type="hidden" name="productId" value={product.id} />
-                        <button type="submit" className="btn-navy w-full px-4 py-2.5">
+                        <button type="submit" className="btn-navy w-full px-4 py-3">
                           Agregar
                         </button>
                       </form>
                     ) : (
-                      <p className="mt-3 rounded-md bg-cream-200 px-4 py-2.5 text-xs font-medium text-ink-500">
+                      <p className="mt-3 rounded-md bg-cream-200 px-4 py-3 text-xs font-medium text-ink-500">
                         {already > 0 ? "Ya está en tu carrito" : "Sin stock"}
                       </p>
                     )}

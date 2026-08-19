@@ -37,59 +37,53 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
       {/* Cabecera */}
       <header className="bg-navy text-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-4">
-          <Link href="/" className="shrink-0">
-            <Logo src={settings.logoUrl} className="h-16 w-auto md:h-[76px]" />
-          </Link>
-
-          <form action="/" className="relative hidden flex-1 md:block">
-            <input
-              type="search"
-              name="q"
-              placeholder="¿Qué corte estás buscando?"
-              aria-label="Buscar productos"
-              className="w-full rounded-full border border-white/15 bg-white/95 py-3.5 pr-12 pl-6
-                         text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
-            />
-            <button
-              type="submit"
-              aria-label="Buscar"
-              className="absolute top-1/2 right-4 -translate-y-1/2 text-navy"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-          </form>
-
-          <nav className="ml-auto flex items-center gap-6 md:gap-8">
-            <a
-              href={whatsappLink(settings.whatsapp, "¡Hola! Tengo una consulta.")}
-              target="_blank"
-              rel="noreferrer"
-              className="hidden flex-col items-center gap-1 text-xs transition hover:text-gold-400 sm:flex"
-            >
-              <Chat className="h-6 w-6" />
-              Ayuda
-            </a>
-            <Link
-              href="/mi-pedido"
-              className="hidden flex-col items-center gap-1 text-xs transition hover:text-gold-400 sm:flex"
-            >
-              <User className="h-6 w-6" />
-              Mi cuenta
+        <div className="mx-auto max-w-7xl px-4 py-3 md:py-4">
+          <div className="flex items-center gap-4 md:gap-6">
+            <Link href="/" className="shrink-0">
+              <Logo src={settings.logoUrl} className="h-14 w-auto sm:h-16 md:h-[76px]" />
             </Link>
-            <Link href="/carrito" className="flex flex-col items-center gap-1 text-xs transition hover:text-gold-400">
-              <span className="relative">
-                <Cart className="h-6 w-6" />
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center
-                                   rounded-full bg-gold-500 px-1 text-[10px] font-semibold text-navy-950">
-                    {count}
-                  </span>
-                )}
-              </span>
-              Mi carrito ({count})
-            </Link>
-          </nav>
+
+            {/* En pantallas grandes el buscador va en la misma fila. */}
+            <SearchBox className="relative hidden flex-1 md:block" />
+
+            <nav className="ml-auto flex items-center gap-5 sm:gap-6 md:gap-8">
+              <a
+                href={whatsappLink(settings.whatsapp, "¡Hola! Tengo una consulta.")}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-col items-center gap-1 text-[11px] transition hover:text-gold-400 sm:text-xs"
+              >
+                <Chat className="h-6 w-6" />
+                Ayuda
+              </a>
+              <Link
+                href="/mi-pedido"
+                className="hidden flex-col items-center gap-1 text-[11px] transition hover:text-gold-400 sm:flex sm:text-xs"
+              >
+                <User className="h-6 w-6" />
+                Mi cuenta
+              </Link>
+              <Link
+                href="/carrito"
+                className="flex flex-col items-center gap-1 text-[11px] transition hover:text-gold-400 sm:text-xs"
+              >
+                <span className="relative">
+                  <Cart className="h-6 w-6" />
+                  {count > 0 && (
+                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center
+                                     rounded-full bg-gold-500 px-1 text-[10px] font-semibold text-navy-950">
+                      {count}
+                    </span>
+                  )}
+                </span>
+                <span className="whitespace-nowrap">Mi carrito ({count})</span>
+              </Link>
+            </nav>
+          </div>
+
+          {/* En celular ocupa su propia fila: el buscador es demasiado
+              importante como para esconderlo detrás de un ícono. */}
+          <SearchBox className="relative mt-3 block md:hidden" />
         </div>
       </header>
 
@@ -103,6 +97,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
             </NavLink>
           ))}
           <NavLink href="/como-comprar">Cómo comprar</NavLink>
+          <NavLink href="/mi-pedido">Seguí tu pedido</NavLink>
         </div>
       </nav>
 
@@ -119,7 +114,10 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
             <ul className="space-y-2 text-sm">
               {categories.map((category) => (
                 <li key={category.id}>
-                  <Link href={`/?categoria=${category.slug}`} className="hover:text-gold-400">
+                  <Link
+                    href={`/?categoria=${category.slug}`}
+                    className="inline-block py-1.5 hover:text-gold-400"
+                  >
                     {category.name}
                   </Link>
                 </li>
@@ -130,12 +128,12 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
             <h3 className="mb-3 font-serif text-base text-white">Ayuda</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/como-comprar" className="hover:text-gold-400">
+                <Link href="/como-comprar" className="inline-block py-1.5 hover:text-gold-400">
                   Cómo comprar
                 </Link>
               </li>
               <li>
-                <Link href="/mi-pedido" className="hover:text-gold-400">
+                <Link href="/mi-pedido" className="inline-block py-1.5 hover:text-gold-400">
                   Seguí tu pedido
                 </Link>
               </li>
@@ -144,7 +142,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                   href={whatsappLink(settings.whatsapp)}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 hover:text-gold-400"
+                  className="flex items-center gap-2 py-1.5 hover:text-gold-400"
                 >
                   <Whatsapp className="h-4 w-4" />
                   {settings.whatsapp || "WhatsApp"}
@@ -159,14 +157,24 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
               {settings.email && <li>{settings.email}</li>}
               {settings.instagram && (
                 <li>
-                  <a href={settings.instagram} target="_blank" rel="noreferrer" className="hover:text-gold-400">
+                  <a
+                    href={settings.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block py-1.5 hover:text-gold-400"
+                  >
                     Instagram
                   </a>
                 </li>
               )}
               {settings.facebook && (
                 <li>
-                  <a href={settings.facebook} target="_blank" rel="noreferrer" className="hover:text-gold-400">
+                  <a
+                    href={settings.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block py-1.5 hover:text-gold-400"
+                  >
                     Facebook
                   </a>
                 </li>
@@ -179,6 +187,30 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         </div>
       </footer>
     </div>
+  );
+}
+
+function SearchBox({ className }: { className: string }) {
+  return (
+    <form action="/" className={className}>
+      <input
+        type="search"
+        name="q"
+        placeholder="¿Qué corte estás buscando?"
+        aria-label="Buscar productos"
+        className="w-full rounded-full border border-white/15 bg-white/95 py-3 pr-12 pl-5
+                   text-base text-ink-900 placeholder:text-ink-500 focus:outline-none
+                   sm:py-3.5 sm:pl-6 sm:text-sm"
+      />
+      <button
+        type="submit"
+        aria-label="Buscar"
+        className="absolute top-1/2 right-1.5 flex h-10 w-10 -translate-y-1/2 items-center
+                   justify-center text-navy sm:right-2"
+      >
+        <Search className="h-5 w-5" />
+      </button>
+    </form>
   );
 }
 

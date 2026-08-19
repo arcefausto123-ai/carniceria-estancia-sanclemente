@@ -112,7 +112,7 @@ export default async function CheckoutDetailsPage({ searchParams }: { searchPara
             />
 
             <div className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-navy/10 pt-6">
-              <Link href="/carrito" className="flex items-center gap-2 text-sm text-navy hover:text-gold-600">
+              <Link href="/carrito" className="-m-2 flex items-center gap-2 p-2 text-sm text-navy hover:text-gold-600">
                 <ArrowLeft className="h-4 w-4" />
                 Volver al carrito
               </Link>

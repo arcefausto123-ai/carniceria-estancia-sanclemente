@@ -60,7 +60,7 @@ export function PaymentChoice({
             value="CASH_ON_PICKUP"
             checked={method === "CASH_ON_PICKUP"}
             onChange={() => setMethod("CASH_ON_PICKUP")}
-            className="mt-1 h-4 w-4 shrink-0 accent-navy"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-navy"
           />
           <Money className="mt-0.5 h-7 w-7 shrink-0 text-navy" />
           <div className="min-w-0 flex-1">
@@ -112,7 +112,7 @@ export function PaymentChoice({
             value="BANK_TRANSFER"
             checked={method === "BANK_TRANSFER"}
             onChange={() => setMethod("BANK_TRANSFER")}
-            className="mt-1 h-4 w-4 shrink-0 accent-navy"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-navy"
           />
           <Bank className="mt-0.5 h-7 w-7 shrink-0 text-navy" />
           <div className="min-w-0 flex-1">
