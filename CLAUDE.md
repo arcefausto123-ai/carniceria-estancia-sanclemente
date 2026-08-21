@@ -95,6 +95,23 @@ así que nunca se importa desde un componente con `"use client"`.
 - `deleteImage` ignora las URL que no son del bucket, así que una imagen
   externa pegada a mano nunca se intenta borrar.
 
+## Puesta en marcha de la base
+
+El esquema y los datos iniciales se pueden aplicar de dos maneras:
+
+- Con Node: `npm run db:push && npm run db:seed`.
+- Sin Node, pegando SQL en el editor de Supabase: primero
+  `prisma/migrations/0_init/migration.sql`, después `prisma/supabase-seed.sql`.
+  Los dos se pueden correr más de una vez sin duplicar nada.
+
+Los datos iniciales viven en `prisma/seed-data.ts` y los consumen tanto el
+seed como el exportador de SQL, así que **no los edites en el `.sql`**:
+cambiá el módulo y regenerá con `npx tsx scripts/export-seed-sql.ts`.
+
+La primera cuenta del panel **no** viene en el seed. La primera vez que se
+entra a `/admin`, la pantalla de login ofrece crearla; en cuanto existe una,
+esa puerta se cierra sola. Después se cambia desde Configuración → Usuarios.
+
 ## Comandos
 
 ```bash

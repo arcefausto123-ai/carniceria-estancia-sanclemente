@@ -6,7 +6,7 @@ import { storageEnabled } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ seccion?: string; guardado?: string }>;
+type SearchParams = Promise<{ seccion?: string; guardado?: string; clave?: string }>;
 
 export default async function SettingsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -21,6 +21,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       saved={params.guardado === "1"}
       admins={admins}
       storageReady={storageEnabled}
+      passwordResult={params.clave}
       settings={{
         businessName: settings.businessName,
         logoUrl: settings.logoUrl ?? "",

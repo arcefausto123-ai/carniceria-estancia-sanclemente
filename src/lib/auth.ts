@@ -84,6 +84,13 @@ export async function getSession(): Promise<{ id: string; name: string } | null>
   }
 }
 
+/** ¿Todavía no hay ninguna cuenta? Entonces toca crear la primera. */
+export async function needsFirstAdmin(): Promise<boolean> {
+  return (await prisma.adminUser.count()) === 0;
+}
+
+export const MIN_PASSWORD_LENGTH = 10;
+
 export async function authenticate(email: string, password: string) {
   const user = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
   if (!user || !verifyPassword(password, user.passwordHash)) return null;

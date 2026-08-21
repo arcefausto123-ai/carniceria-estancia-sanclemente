@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { saveSettings } from "../actions";
+import { saveSettings, changePassword } from "../actions";
 import { Logo } from "@/components/logo";
 import { ImageField } from "@/components/admin/image-field";
 import {
@@ -52,12 +52,14 @@ export function SettingsForm({
   saved,
   admins,
   storageReady,
+  passwordResult,
 }: {
   settings: Values;
   section: string;
   saved: boolean;
   admins: { id: string; name: string; email: string; role: string }[];
   storageReady: boolean;
+  passwordResult?: string;
 }) {
   const [values, setValues] = useState(settings);
   const [dirty, setDirty] = useState(false);
@@ -68,7 +70,12 @@ export function SettingsForm({
   };
 
   return (
-    <form action={saveSettings} onChange={() => setDirty(true)} className="pb-24">
+    <>
+      {/* Hermano del formulario de configuración: los campos se enganchan
+          con el atributo form="cambiar-clave". */}
+      <form id="cambiar-clave" action={changePassword} className="hidden" />
+
+      <form action={saveSettings} onChange={() => setDirty(true)} className="pb-24">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl text-ink-900">Configuración</h1>
@@ -412,12 +419,9 @@ export function SettingsForm({
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 flex items-start gap-2 rounded-lg bg-info-bg px-3 py-2.5 text-xs text-info-fg">
-                <Info className="mt-px h-4 w-4 shrink-0" />
-                Para agregar un usuario nuevo, ejecutá <code>npm run db:seed</code> con las
-                variables ADMIN_EMAIL y ADMIN_PASSWORD, o cargalo desde Prisma Studio.
-              </p>
             </div>
+
+            <PasswordPanel result={passwordResult} />
           </Section>
         </div>
 
@@ -486,6 +490,80 @@ export function SettingsForm({
         </div>
       )}
     </form>
+    </>
+  );
+}
+
+/**
+ * Cambio de contraseña. Vive en su propio <form>, y por eso se renderiza
+ * fuera del formulario grande de Configuración: HTML no admite formularios
+ * anidados.
+ */
+function PasswordPanel({ result }: { result?: string }) {
+  const MESSAGES: Record<string, { tone: string; text: string }> = {
+    ok: { tone: "bg-ok-bg text-ok-fg", text: "Tu contraseña se cambió correctamente." },
+    actual: { tone: "bg-danger-bg text-danger-fg", text: "La contraseña actual no es correcta." },
+    corta: { tone: "bg-danger-bg text-danger-fg", text: "La nueva necesita al menos 10 caracteres." },
+    distintas: { tone: "bg-danger-bg text-danger-fg", text: "Las dos contraseñas nuevas no coinciden." },
+    igual: { tone: "bg-warn-bg text-warn-fg", text: "La nueva contraseña es igual a la actual." },
+  };
+  const message = result ? MESSAGES[result] : undefined;
+
+  return (
+    <div className="panel mt-5 p-5">
+      <h2 className="panel-title mb-1">Cambiar mi contraseña</h2>
+      <p className="mb-4 text-sm text-ink-500">Sólo afecta a la cuenta con la que entraste.</p>
+
+      {message && (
+        <p className={`mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm ${message.tone}`}>
+          {result === "ok" ? <CheckCircle className="h-4 w-4" /> : <Alert className="h-4 w-4" />}
+          {message.text}
+        </p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="block">
+          <span className="admin-label">Contraseña actual</span>
+          <input
+            form="cambiar-clave"
+            name="currentPassword"
+            type="password"
+            required
+            autoComplete="current-password"
+            className="admin-field"
+          />
+        </label>
+        <label className="block">
+          <span className="admin-label">Nueva contraseña</span>
+          <input
+            form="cambiar-clave"
+            name="newPassword"
+            type="password"
+            required
+            minLength={10}
+            autoComplete="new-password"
+            className="admin-field"
+          />
+        </label>
+        <label className="block">
+          <span className="admin-label">Repetir la nueva</span>
+          <input
+            form="cambiar-clave"
+            name="repeatPassword"
+            type="password"
+            required
+            minLength={10}
+            autoComplete="new-password"
+            className="admin-field"
+          />
+        </label>
+      </div>
+
+      <button form="cambiar-clave" type="submit" className="btn-primary mt-4">
+        <Save className="h-4 w-4" />
+        Cambiar contraseña
+      </button>
+    </div>
   );
 }
 

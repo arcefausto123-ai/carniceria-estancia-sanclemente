@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, verifyPassword, hashPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth";
 import { getSettings, SETTINGS_ID } from "@/lib/settings";
 import { parsePriceToCents, parseWeightKg } from "@/lib/format";
 import { normalizePhone } from "@/lib/whatsapp";
@@ -583,4 +583,30 @@ export async function recalculateDeposit(formData: FormData) {
   ]);
 
   revalidatePath(`/admin/pedidos/${code}`);
+}
+
+/** Cambia la contraseña de la cuenta con la que estás trabajando. */
+export async function changePassword(formData: FormData) {
+  const session = await requireAdmin();
+
+  const current = String(formData.get("currentPassword") ?? "");
+  const next = String(formData.get("newPassword") ?? "");
+  const repeat = String(formData.get("repeatPassword") ?? "");
+
+  const target = "/admin/configuracion?seccion=usuarios";
+  const user = await prisma.adminUser.findUnique({ where: { id: session.id } });
+  if (!user) redirect("/admin/login");
+
+  if (!verifyPassword(current, user.passwordHash)) redirect(`${target}&clave=actual`);
+  if (next.length < MIN_PASSWORD_LENGTH) redirect(`${target}&clave=corta`);
+  if (next !== repeat) redirect(`${target}&clave=distintas`);
+  if (verifyPassword(next, user.passwordHash)) redirect(`${target}&clave=igual`);
+
+  await prisma.adminUser.update({
+    where: { id: user.id },
+    data: { passwordHash: hashPassword(next) },
+  });
+
+  revalidatePath(target);
+  redirect(`${target}&clave=ok`);
 }
