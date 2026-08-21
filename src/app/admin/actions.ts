@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { getSettings, SETTINGS_ID } from "@/lib/settings";
 import { parsePriceToCents, parseWeightKg } from "@/lib/format";
 import { normalizePhone } from "@/lib/whatsapp";
+import { deleteImage } from "@/lib/storage";
 import { calculateDeposit } from "@/lib/pricing";
 import type { OrderStatus, ProductStatus, SlotKind } from "@prisma/client";
 
@@ -81,7 +82,10 @@ export async function saveProduct(formData: FormData) {
   };
 
   if (id) {
+    // Si cambió la foto, la anterior queda huérfana en el bucket.
+    const previous = await prisma.product.findUnique({ where: { id }, select: { image: true } });
     await prisma.product.update({ where: { id }, data });
+    if (previous?.image && previous.image !== data.image) await deleteImage(previous.image);
   } else {
     await prisma.product.create({
       data: { ...data, slug: await uniqueSlug(name, "product") },
@@ -126,9 +130,13 @@ export async function deleteProduct(formData: FormData) {
   // romper el histórico de pedidos.
   const sold = await prisma.orderItem.count({ where: { productId: id } });
   if (sold > 0) {
+    // Ya se vendió: lo archivamos y conservamos la foto, que sigue apareciendo
+    // en el detalle de los pedidos viejos.
     await prisma.product.update({ where: { id }, data: { status: "DRAFT", stock: 0 } });
   } else {
+    const product = await prisma.product.findUnique({ where: { id }, select: { image: true } });
     await prisma.product.delete({ where: { id } }).catch(() => {});
+    await deleteImage(product?.image);
   }
 
   revalidatePath("/admin/productos");
@@ -164,7 +172,14 @@ export async function saveCategory(formData: FormData) {
   };
 
   if (id) {
+    const previous = await prisma.category.findUnique({
+      where: { id },
+      select: { coverImage: true },
+    });
     await prisma.category.update({ where: { id }, data });
+    if (previous?.coverImage && previous.coverImage !== data.coverImage) {
+      await deleteImage(previous.coverImage);
+    }
   } else {
     const last = await prisma.category.findFirst({ orderBy: { position: "desc" } });
     await prisma.category.create({
@@ -208,7 +223,13 @@ export async function deleteCategory(formData: FormData) {
   const products = await prisma.product.count({ where: { categoryId: id } });
   if (products > 0) redirect("/admin/categorias?error=con-productos");
 
+  const category = await prisma.category.findUnique({
+    where: { id },
+    select: { coverImage: true },
+  });
   await prisma.category.delete({ where: { id } }).catch(() => {});
+  await deleteImage(category?.coverImage);
+
   revalidatePath("/admin/categorias");
   revalidatePath("/");
 }
@@ -486,12 +507,18 @@ export async function saveSettings(formData: FormData) {
   await getSettings(); // se asegura de que la fila exista
 
   const depositPct = Math.min(100, Math.max(0, num(formData, "depositPct", 30)));
+  const logoUrl = text(formData, "logoUrl") || null;
+
+  const previous = await prisma.settings.findUnique({
+    where: { id: SETTINGS_ID },
+    select: { logoUrl: true },
+  });
 
   await prisma.settings.update({
     where: { id: SETTINGS_ID },
     data: {
       businessName: text(formData, "businessName"),
-      logoUrl: text(formData, "logoUrl") || null,
+      logoUrl,
       whatsapp: text(formData, "whatsapp"),
       email: text(formData, "email"),
       address: text(formData, "address"),
@@ -519,6 +546,8 @@ export async function saveSettings(formData: FormData) {
       msgReady: text(formData, "msgReady"),
     },
   });
+
+  if (previous?.logoUrl && previous.logoUrl !== logoUrl) await deleteImage(previous.logoUrl);
 
   // Cambiar el % de seña sólo afecta a los pedidos nuevos; los ya emitidos
   // conservan el porcentaje con el que se calcularon.

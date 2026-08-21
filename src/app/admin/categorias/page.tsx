@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/admin/ui";
 import { Info, Plus } from "@/components/icons";
 import { CategoryList } from "./category-list";
 import { CategoryDrawer } from "./category-drawer";
+import { storageEnabled } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,9 @@ export default async function CategoriesPage({ searchParams }: { searchParams: S
         </div>
       </div>
 
-      {drawerOpen && <CategoryDrawer category={editing ? toItem(editing) : null} />}
+      {drawerOpen && (
+        <CategoryDrawer category={editing ? toItem(editing) : null} storageReady={storageEnabled} />
+      )}
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { saveCategory } from "../actions";
-import { CategoryIcon, CATEGORY_ICONS, XCircle, Upload, Save } from "@/components/icons";
+import { CategoryIcon, CATEGORY_ICONS, XCircle, Save } from "@/components/icons";
+import { ImageField } from "@/components/admin/image-field";
 import type { CategoryItem } from "./page";
 
 const ICON_LABELS: Record<string, string> = {
@@ -15,9 +16,14 @@ const ICON_LABELS: Record<string, string> = {
   tag: "Genérico",
 };
 
-export function CategoryDrawer({ category }: { category: CategoryItem | null }) {
+export function CategoryDrawer({
+  category,
+  storageReady,
+}: {
+  category: CategoryItem | null;
+  storageReady: boolean;
+}) {
   const [icon, setIcon] = useState(category?.icon ?? "tag");
-  const [cover, setCover] = useState(category?.coverImage ?? "");
   const [name, setName] = useState(category?.name ?? "");
 
   return (
@@ -99,40 +105,15 @@ export function CategoryDrawer({ category }: { category: CategoryItem | null }) 
           />
         </label>
 
-        {/* Portada */}
-        <div>
-          <span className="admin-label">Imagen de portada</span>
-          {cover ? (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={cover}
-                alt="Portada de la categoría"
-                className="h-20 w-28 rounded-lg border border-ink-200 object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => setCover("")}
-                className="btn-secondary text-xs"
-              >
-                Quitar imagen
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center rounded-lg border-2 border-dashed border-ink-300 px-4 py-6 text-center">
-              <Upload className="h-6 w-6 text-ink-500" />
-              <p className="mt-1.5 text-xs text-ink-500">Recomendado: 1200 × 600 px · máx. 5 MB</p>
-            </div>
-          )}
-          <input
-            name="coverImage"
-            type="url"
-            value={cover}
-            onChange={(event) => setCover(event.target.value)}
-            placeholder="https://…/portada.jpg"
-            className="admin-field mt-2"
-          />
-        </div>
+        <ImageField
+          name="coverImage"
+          folder="categorias"
+          defaultValue={category?.coverImage}
+          label="Imagen de portada"
+          hint="Recomendado 1200 × 600 px · máx. 5 MB"
+          storageReady={storageReady}
+          aspect="h-32"
+        />
 
         <label className="block">
           <span className="admin-label">Texto destacado (opcional)</span>

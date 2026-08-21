@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { saveSettings } from "../actions";
 import { Logo } from "@/components/logo";
+import { ImageField } from "@/components/admin/image-field";
 import {
   Store, Clock, Box, Card, Bell, Users, Save, Info, Whatsapp, Pin, Alert, CheckCircle, ArrowRight,
 } from "@/components/icons";
@@ -50,11 +51,13 @@ export function SettingsForm({
   section,
   saved,
   admins,
+  storageReady,
 }: {
   settings: Values;
   section: string;
   saved: boolean;
   admins: { id: string; name: string; email: string; role: string }[];
+  storageReady: boolean;
 }) {
   const [values, setValues] = useState(settings);
   const [dirty, setDirty] = useState(false);
@@ -112,22 +115,27 @@ export function SettingsForm({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <span className="admin-label">Logo de la tienda</span>
-                  <div className="flex items-center gap-4">
-                    <span className="flex h-24 w-36 items-center justify-center rounded-lg border border-ink-200 bg-navy p-2 text-white">
+                  <div className="flex flex-wrap items-end gap-4">
+                    <span className="flex h-24 w-36 shrink-0 items-center justify-center
+                                     rounded-lg border border-ink-200 bg-navy p-2">
                       <Logo src={values.logoUrl || null} className="h-full w-auto" />
                     </span>
-                    <input
-                      name="logoUrl"
-                      type="url"
-                      value={values.logoUrl}
-                      onChange={(event) => set("logoUrl", event.target.value)}
-                      placeholder="https://…/logo.png"
-                      className="admin-field flex-1"
-                    />
+                    <div className="min-w-56 flex-1">
+                      <ImageField
+                        name="logoUrl"
+                        folder="marca"
+                        defaultValue={values.logoUrl}
+                        label="Logo de la tienda"
+                        hint="PNG con fondo transparente, en blanco"
+                        storageReady={storageReady}
+                        aspect="h-24"
+                        onChange={(next) => set("logoUrl", next)}
+                      />
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs text-ink-500">
-                    Dejalo vacío para usar el isologo por defecto.
+                  <p className="mt-2 text-xs text-ink-500">
+                    Dejalo vacío para usar el logo oficial. Ojo: la tienda lo muestra siempre
+                    sobre fondo azul, así que tiene que ser claro.
                   </p>
                 </div>
 

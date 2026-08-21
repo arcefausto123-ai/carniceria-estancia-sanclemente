@@ -6,6 +6,7 @@ import { StatCard, ProductBadge, TabLink, PageHeader, EmptyState } from "@/compo
 import { ProductDrawer } from "./product-drawer";
 import { duplicateProduct, deleteProduct } from "../actions";
 import { Tag, Box, Alert, XCircle, Plus, Upload, Pencil, Copy, Trash, Search } from "@/components/icons";
+import { storageEnabled } from "@/lib/storage";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -295,6 +296,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         <ProductDrawer
           product={editing}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+          storageReady={storageEnabled}
         />
       )}
     </div>

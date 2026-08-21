@@ -9,13 +9,15 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "storage:setup": "tsx scripts/setup-storage.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
+    "@supabase/supabase-js": "^2.112.3",
     "next": "^16.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { saveProduct } from "../actions";
-import { Image as ImageIcon, XCircle, Info, Minus, Plus } from "@/components/icons";
+import { XCircle, Info, Minus, Plus } from "@/components/icons";
+import { ImageField } from "@/components/admin/image-field";
 import type { Product } from "@prisma/client";
 
 /**
@@ -13,12 +14,13 @@ import type { Product } from "@prisma/client";
 export function ProductDrawer({
   product,
   categories,
+  storageReady,
 }: {
   product: Product | null;
   categories: { id: string; name: string }[];
+  storageReady: boolean;
 }) {
   const [stock, setStock] = useState(product?.stock ?? 1);
-  const [preview, setPreview] = useState(product?.image ?? "");
 
   return (
     <aside className="panel h-fit p-5 xl:sticky xl:top-24">
@@ -36,41 +38,14 @@ export function ProductDrawer({
       <form action={saveProduct} className="space-y-4">
         {product && <input type="hidden" name="id" value={product.id} />}
 
-        {/* Foto */}
-        <div>
-          <label className="admin-label" htmlFor="image">
-            Foto del envase
-          </label>
-          {preview ? (
-            <div className="relative overflow-hidden rounded-lg border border-ink-200">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview} alt="Vista previa" className="h-40 w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => setPreview("")}
-                className="absolute top-2 right-2 rounded-full bg-white/90 p-1 text-ink-700 hover:text-danger-fg"
-                aria-label="Quitar imagen"
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-ink-300 px-4 py-8 text-center">
-              <ImageIcon className="h-7 w-7 text-ink-500" />
-              <p className="mt-2 text-sm text-ink-700">Pegá la URL de la foto del envase</p>
-              <p className="text-xs text-ink-500">PNG o JPG · máx. 5 MB</p>
-            </div>
-          )}
-          <input
-            id="image"
-            name="image"
-            type="url"
-            value={preview}
-            onChange={(event) => setPreview(event.target.value)}
-            placeholder="https://…/entrana.jpg"
-            className="admin-field mt-2"
-          />
-        </div>
+        <ImageField
+          name="image"
+          folder="productos"
+          defaultValue={product?.image}
+          label="Foto del envase"
+          hint="JPG, PNG o WebP · máx. 5 MB"
+          storageReady={storageReady}
+        />
 
         <label className="block">
           <span className="admin-label">Nombre del corte</span>

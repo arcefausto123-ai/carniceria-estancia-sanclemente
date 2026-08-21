@@ -2,6 +2,7 @@ import { getSettings } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_TEMPLATES } from "@/lib/whatsapp";
 import { SettingsForm } from "./settings-form";
+import { storageEnabled } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       section={params.seccion ?? "negocio"}
       saved={params.guardado === "1"}
       admins={admins}
+      storageReady={storageEnabled}
       settings={{
         businessName: settings.businessName,
         logoUrl: settings.logoUrl ?? "",

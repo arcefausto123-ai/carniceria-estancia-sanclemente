@@ -77,6 +77,24 @@ llevan una "E" con los dos puntos de la marca. El de iOS sí lo usa entero.
   dorado `--color-gold-*`. Títulos en serif.
 - Panel: azul de trabajo `--color-admin-blue` (#1668c8) sobre `--color-admin-bg`.
 
+## Imágenes
+
+Las fotos van a Supabase Storage, bucket `tienda`, en carpetas por tipo
+(`productos/`, `categorias/`, `marca/`). Toda la lógica está en
+`src/lib/storage.ts`, que es **sólo de servidor**: usa la `service_role` key,
+así que nunca se importa desde un componente con `"use client"`.
+
+- El campo de carga es `<ImageField>`. Redimensiona en el navegador a 1600 px
+  antes de subir: una foto de celular pesa 5-8 MB y así viajan ~300 KB.
+- Si faltan las variables de Supabase, `storageEnabled` es false y el panel
+  cae a pedir la URL a mano. El proyecto tiene que seguir andando sin
+  credenciales.
+- Al reemplazar o borrar una imagen se borra la anterior del bucket. Un
+  producto ya vendido se archiva en vez de borrarse, y **conserva su foto**,
+  porque sigue apareciendo en los pedidos viejos.
+- `deleteImage` ignora las URL que no son del bucket, así que una imagen
+  externa pegada a mano nunca se intenta borrar.
+
 ## Comandos
 
 ```bash
@@ -84,5 +102,6 @@ npm run dev        # desarrollo
 npm run build      # build (corre prisma generate)
 npm run db:push    # aplica el esquema
 npm run db:seed    # datos iniciales
+npm run storage:setup   # crea el bucket de imágenes en Supabase
 npx tsc --noEmit   # chequeo de tipos
 ```
