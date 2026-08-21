@@ -100,9 +100,18 @@ así que nunca se importa desde un componente con `"use client"`.
 El esquema y los datos iniciales se pueden aplicar de dos maneras:
 
 - Con Node: `npm run db:push && npm run db:seed`.
-- Sin Node, pegando SQL en el editor de Supabase: primero
-  `prisma/migrations/0_init/migration.sql`, después `prisma/supabase-seed.sql`.
-  Los dos se pueden correr más de una vez sin duplicar nada.
+- Sin Node, pegando SQL en el editor de Supabase, en este orden:
+  `prisma/migrations/0_init/migration.sql`, `prisma/supabase-seed.sql` y
+  `prisma/baseline.sql`. Los tres se pueden correr más de una vez.
+
+El tercero no es opcional: le registra a Prisma que la migración inicial ya
+está aplicada. Sin él, `prisma migrate deploy` falla con `P3005` al encontrar
+tablas que existen sin registro de haberlas creado. Se regenera con
+`npx tsx scripts/export-baseline-sql.ts` cada vez que cambie la migración.
+
+El deploy en Vercel corre `vercel-build`, que aplica las migraciones
+pendientes antes de compilar. El `build` común no las toca, así que sigue
+andando sin conexión a la base. El detalle completo está en `DEPLOY.md`.
 
 Los datos iniciales viven en `prisma/seed-data.ts` y los consumen tanto el
 seed como el exportador de SQL, así que **no los edites en el `.sql`**:
