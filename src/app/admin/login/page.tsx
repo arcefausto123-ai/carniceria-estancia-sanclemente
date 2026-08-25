@@ -14,13 +14,18 @@ async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 
-  const user = await authenticate(email, password);
-  if (!user) {
+  const result = await authenticate(email, password);
+  if (!result.ok) {
     // Devolvemos el correo para no obligar a reescribirlo.
-    redirect(`/admin/login?error=credenciales&email=${encodeURIComponent(email)}`);
+    const back = `&email=${encodeURIComponent(email)}`;
+    redirect(
+      result.reason === "bloqueada"
+        ? `/admin/login?error=bloqueada&minutos=${result.minutes}${back}`
+        : `/admin/login?error=credenciales${back}`,
+    );
   }
 
-  await createSession({ id: user.id, name: user.name });
+  await createSession(result.user);
   redirect("/admin");
 }
 
@@ -46,7 +51,7 @@ async function createFirstAdmin(formData: FormData) {
     data: { name, email, passwordHash: hashPassword(password) },
   });
 
-  await createSession({ id: user.id, name: user.name });
+  await createSession(user);
   redirect("/admin");
 }
 
@@ -57,10 +62,10 @@ const ERRORS: Record<string, string> = {
   distintas: "Las dos contraseñas no coinciden.",
 };
 
-type SearchParams = Promise<{ error?: string; email?: string }>;
+type SearchParams = Promise<{ error?: string; email?: string; minutos?: string }>;
 
 export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
-  const { error, email } = await searchParams;
+  const { error, email, minutos } = await searchParams;
   if (await getSession()) redirect("/admin");
 
   const [settings, firstRun] = await Promise.all([getSettings(), needsFirstAdmin()]);
@@ -85,11 +90,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               : "Ingresá con tu cuenta para continuar."}
           </p>
 
-          {error && ERRORS[error] && (
-            <p className="mt-4 flex items-start gap-2 rounded-lg bg-danger-bg px-3 py-2.5 text-sm text-danger-fg">
+          {error === "bloqueada" ? (
+            <p className="mt-4 flex items-start gap-2 rounded-lg bg-warn-bg px-3 py-2.5 text-sm text-warn-fg">
               <Alert className="mt-px h-4 w-4 shrink-0" />
-              {ERRORS[error]}
+              Demasiados intentos fallidos. Volvé a probar en {minutos ?? "unos"} minutos.
             </p>
+          ) : (
+            error && ERRORS[error] && (
+              <p className="mt-4 flex items-start gap-2 rounded-lg bg-danger-bg px-3 py-2.5 text-sm text-danger-fg">
+                <Alert className="mt-px h-4 w-4 shrink-0" />
+                {ERRORS[error]}
+              </p>
+            )
           )}
 
           {firstRun && (

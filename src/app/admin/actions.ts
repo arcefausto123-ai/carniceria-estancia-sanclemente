@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getSession, verifyPassword, hashPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth";
+import {
+  getSession, verifyPassword, hashPassword, createSession, MIN_PASSWORD_LENGTH,
+} from "@/lib/auth";
 import { getSettings, SETTINGS_ID } from "@/lib/settings";
 import { parsePriceToCents, parseWeightKg } from "@/lib/format";
 import { normalizePhone } from "@/lib/whatsapp";
@@ -602,10 +604,14 @@ export async function changePassword(formData: FormData) {
   if (next !== repeat) redirect(`${target}&clave=distintas`);
   if (verifyPassword(next, user.passwordHash)) redirect(`${target}&clave=igual`);
 
-  await prisma.adminUser.update({
+  // Subir sessionVersion invalida cualquier sesión abierta en otro navegador.
+  const updated = await prisma.adminUser.update({
     where: { id: user.id },
-    data: { passwordHash: hashPassword(next) },
+    data: { passwordHash: hashPassword(next), sessionVersion: { increment: 1 } },
   });
+
+  // Renovamos la propia, para no echarnos a nosotros mismos.
+  await createSession(updated);
 
   revalidatePath(target);
   redirect(`${target}&clave=ok`);

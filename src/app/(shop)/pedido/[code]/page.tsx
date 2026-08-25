@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
+import { getSession } from "@/lib/auth";
 import { formatMoney, formatWeight } from "@/lib/format";
 import { ORDER_STATUS_LABEL, ORDER_TIMELINE, timelineIndex } from "@/lib/orders";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -13,7 +14,7 @@ import { TransferForm } from "./transfer-form";
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ code: string }>;
-type SearchParams = Promise<{ estado?: string; informado?: string }>;
+type SearchParams = Promise<{ estado?: string; informado?: string; t?: string }>;
 
 export default async function OrderPage({
   params,
@@ -23,7 +24,7 @@ export default async function OrderPage({
   searchParams: SearchParams;
 }) {
   const { code } = await params;
-  const { estado, informado } = await searchParams;
+  const { estado, informado, t: token } = await searchParams;
 
   const [order, settings] = await Promise.all([
     prisma.order.findUnique({
@@ -34,6 +35,12 @@ export default async function OrderPage({
   ]);
 
   if (!order) notFound();
+
+  // Los códigos son correlativos: sin el token no alcanza con adivinar uno.
+  // El panel entra igual, para poder abrir cualquier pedido desde adentro.
+  if (order.publicToken !== token && !(await getSession())) {
+    redirect(`/mi-pedido?error=token&code=${order.code}`);
+  }
 
   const showTracking = estado === "1";
   const pending = order.payments.find((p) => p.status === "PENDING");
@@ -87,6 +94,7 @@ export default async function OrderPage({
         {pending && (
           <TransferForm
             code={order.code}
+            token={order.publicToken}
             paymentId={pending.id}
             concept={pending.kind === "DEPOSIT" ? `la seña del ${order.depositPct}%` : "el pago total"}
             expected={formatMoney(pending.expectedCents)}
@@ -230,7 +238,7 @@ export default async function OrderPage({
               Volver al inicio
             </Link>
           ) : (
-            <Link href={`/pedido/${order.code}?estado=1`} className="btn-navy">
+            <Link href={`/pedido/${order.code}?t=${order.publicToken}&estado=1`} className="btn-navy">
               Ver estado del pedido
             </Link>
           )}

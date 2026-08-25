@@ -17,13 +17,16 @@ Sin Node, se pega SQL en el **SQL Editor** de Supabase, en este orden:
 |---|---|---|
 | 1 | `prisma/migrations/0_init/migration.sql` | Crea las 15 tablas y los 7 enums. |
 | 2 | `prisma/supabase-seed.sql` | Carga categorías, productos, zonas, franjas y configuración. |
-| 3 | `prisma/baseline.sql` | Le avisa a Prisma que la migración ya está aplicada. |
+| 3 | `prisma/migrations/1_seguridad/migration.sql` | Token de acceso a los pedidos y freno de fuerza bruta. |
+| 4 | `prisma/baseline.sql` | Le avisa a Prisma qué migraciones ya están aplicadas. |
 
-**El paso 3 no es opcional si usaste el editor SQL.** Sin él, el primer
+**El último paso no es opcional si usaste el editor SQL.** Sin él, un
 `prisma migrate deploy` falla con `P3005` porque encuentra tablas que ya
 existen y no tiene registro de haberlas creado.
 
-Los tres se pueden correr más de una vez sin romper nada.
+El seed, la migración de seguridad y el baseline se pueden correr más de una
+vez. `0_init` no: crea las tablas y, si ya existen, da error. Se corre una
+sola vez sobre una base vacía.
 
 Para verificar:
 

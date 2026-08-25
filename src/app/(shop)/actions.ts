@@ -316,7 +316,7 @@ export async function placeOrder(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin");
-  redirect(`/pedido/${order.code}`);
+  redirect(`/pedido/${order.code}?t=${order.publicToken}`);
 }
 
 /**
@@ -327,13 +327,18 @@ export async function placeOrder(formData: FormData) {
 export async function reportTransfer(formData: FormData) {
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const paymentId = String(formData.get("paymentId") ?? "");
+  const token = String(formData.get("token") ?? "");
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: { order: true },
   });
-  if (!payment || payment.order.code !== code) redirect(`/pedido/${code}?informado=error`);
-  if (payment.status !== "PENDING") redirect(`/pedido/${code}?informado=ya`);
+  // El token es lo que prueba que quien informa el pago es el dueño del
+  // pedido; el código solo no alcanza porque es correlativo.
+  if (!payment || payment.order.code !== code || payment.order.publicToken !== token) {
+    redirect("/mi-pedido?error=1");
+  }
+  if (payment.status !== "PENDING") redirect(`/pedido/${code}?t=${token}&informado=ya`);
 
   const value = (key: string) => String(formData.get(key) ?? "").trim() || null;
   const reported = parsePriceToCents(String(formData.get("amount") ?? ""));
@@ -363,5 +368,5 @@ export async function reportTransfer(formData: FormData) {
 
   revalidatePath("/admin/pagos");
   revalidatePath(`/pedido/${code}`);
-  redirect(`/pedido/${code}?informado=1`);
+  redirect(`/pedido/${code}?t=${token}&informado=1`);
 }

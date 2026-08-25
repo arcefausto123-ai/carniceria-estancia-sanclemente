@@ -11,12 +11,14 @@ import { Bank, Info, CheckCircle } from "@/components/icons";
  */
 export function TransferForm({
   code,
+  token,
   paymentId,
   concept,
   expected,
   reported,
 }: {
   code: string;
+  token: string;
   paymentId: string;
   concept: string;
   expected: string;
@@ -45,6 +47,7 @@ export function TransferForm({
   return (
     <form action={reportTransfer} className="shop-card mt-5 p-6">
       <input type="hidden" name="code" value={code} />
+      <input type="hidden" name="token" value={token} />
       <input type="hidden" name="paymentId" value={paymentId} />
 
       <h2 className="font-serif text-xl text-navy">Datos de tu transferencia</h2>

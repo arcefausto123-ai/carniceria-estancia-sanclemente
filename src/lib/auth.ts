@@ -35,16 +35,17 @@ export function verifyPassword(password: string, stored: string): boolean {
 
 // --- sesión firmada en cookie ---
 
-type SessionPayload = { id: string; name: string; exp: number };
+type SessionPayload = { id: string; name: string; v: number; exp: number };
 
 function sign(value: string): string {
   return createHmac("sha256", secret()).update(value).digest("base64url");
 }
 
-export async function createSession(user: { id: string; name: string }) {
+export async function createSession(user: { id: string; name: string; sessionVersion: number }) {
   const payload: SessionPayload = {
     id: user.id,
     name: user.name,
+    v: user.sessionVersion,
     exp: Date.now() + MAX_AGE_SECONDS * 1000,
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -75,13 +76,24 @@ export async function getSession(): Promise<{ id: string; name: string } | null>
     return null;
   }
 
+  let payload: SessionPayload;
   try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as SessionPayload;
-    if (payload.exp < Date.now()) return null;
-    return { id: payload.id, name: payload.name };
+    payload = JSON.parse(Buffer.from(body, "base64url").toString()) as SessionPayload;
   } catch {
     return null;
   }
+  if (payload.exp < Date.now()) return null;
+
+  // La firma sólo prueba que la cookie la emitimos nosotros. Contrastamos
+  // contra la base para que cambiar la contraseña corte las sesiones que
+  // hubiera abiertas en otro lado.
+  const user = await prisma.adminUser.findUnique({
+    where: { id: payload.id },
+    select: { name: true, sessionVersion: true },
+  });
+  if (!user || user.sessionVersion !== payload.v) return null;
+
+  return { id: payload.id, name: user.name };
 }
 
 /** ¿Todavía no hay ninguna cuenta? Entonces toca crear la primera. */
@@ -91,8 +103,60 @@ export async function needsFirstAdmin(): Promise<boolean> {
 
 export const MIN_PASSWORD_LENGTH = 10;
 
-export async function authenticate(email: string, password: string) {
-  const user = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
-  if (!user || !verifyPassword(password, user.passwordHash)) return null;
-  return user;
+/** Intentos fallidos permitidos antes de bloquear la cuenta, y por cuánto. */
+export const MAX_FAILED_LOGINS = 8;
+export const LOCKOUT_MINUTES = 15;
+
+export type AuthResult =
+  | { ok: true; user: { id: string; name: string; sessionVersion: number } }
+  | { ok: false; reason: "credenciales" }
+  | { ok: false; reason: "bloqueada"; minutes: number };
+
+/**
+ * Verifica las credenciales y frena la fuerza bruta: tras varios fallos
+ * seguidos la cuenta queda bloqueada un rato. El contador vive en la base
+ * porque en serverless cada instancia tiene su propia memoria.
+ */
+export async function authenticate(email: string, password: string): Promise<AuthResult> {
+  const user = await prisma.adminUser.findUnique({
+    where: { email: email.toLowerCase().trim() },
+  });
+
+  // Comparamos igual contra un hash descartable cuando el usuario no existe,
+  // para no delatar por tiempo de respuesta qué correos están registrados.
+  if (!user) {
+    verifyPassword(password, hashPassword("usuario-inexistente"));
+    return { ok: false, reason: "credenciales" };
+  }
+
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    const minutes = Math.max(1, Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000));
+    return { ok: false, reason: "bloqueada", minutes };
+  }
+
+  if (!verifyPassword(password, user.passwordHash)) {
+    const failed = user.failedLogins + 1;
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: {
+        failedLogins: failed,
+        lockedUntil:
+          failed >= MAX_FAILED_LOGINS
+            ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
+            : null,
+      },
+    });
+    return failed >= MAX_FAILED_LOGINS
+      ? { ok: false, reason: "bloqueada", minutes: LOCKOUT_MINUTES }
+      : { ok: false, reason: "credenciales" };
+  }
+
+  if (user.failedLogins > 0 || user.lockedUntil) {
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: { failedLogins: 0, lockedUntil: null },
+    });
+  }
+
+  return { ok: true, user: { id: user.id, name: user.name, sessionVersion: user.sessionVersion } };
 }

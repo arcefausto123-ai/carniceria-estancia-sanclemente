@@ -101,8 +101,10 @@ El esquema y los datos iniciales se pueden aplicar de dos maneras:
 
 - Con Node: `npm run db:push && npm run db:seed`.
 - Sin Node, pegando SQL en el editor de Supabase, en este orden:
-  `prisma/migrations/0_init/migration.sql`, `prisma/supabase-seed.sql` y
-  `prisma/baseline.sql`. Los tres se pueden correr más de una vez.
+  `prisma/migrations/0_init/migration.sql`, `prisma/supabase-seed.sql`,
+  `prisma/migrations/1_seguridad/migration.sql` y `prisma/baseline.sql`.
+  Todos menos `0_init` se pueden correr más de una vez; ése crea las tablas
+  y hay que correrlo una sola vez sobre una base vacía.
 
 El tercero no es opcional: le registra a Prisma que la migración inicial ya
 está aplicada. Sin él, `prisma migrate deploy` falla con `P3005` al encontrar

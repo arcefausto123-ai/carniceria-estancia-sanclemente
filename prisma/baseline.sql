@@ -1,9 +1,9 @@
--- Marca la migración "0_init" como ya aplicada.
+-- Marca como aplicadas las migraciones que ya corriste a mano.
 -- Generado con: npx tsx scripts/export-baseline-sql.ts
 --
--- Corré esto SÓLO si cargaste el esquema pegando migration.sql en el editor
--- de Supabase. Si usaste `npm run db:push` o `prisma migrate deploy`, no
--- hace falta. Se puede correr más de una vez.
+-- Corré esto SÓLO si cargaste el esquema pegando los .sql en el editor de
+-- Supabase. Si usaste `npm run db:push` o `prisma migrate deploy`, no hace
+-- falta. Se puede correr más de una vez.
 
 CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
     "id"                    VARCHAR(36) PRIMARY KEY NOT NULL,
@@ -22,4 +22,12 @@ INSERT INTO "_prisma_migrations" (
 SELECT gen_random_uuid()::text, '0a420b3625f79d428c21cbb0fe4c07e75a0e907f79b7769e54708e9cda8295a5', now(), '0_init', now(), 1
 WHERE NOT EXISTS (
     SELECT 1 FROM "_prisma_migrations" WHERE "migration_name" = '0_init'
+);
+
+INSERT INTO "_prisma_migrations" (
+    "id", "checksum", "finished_at", "migration_name", "started_at", "applied_steps_count"
+)
+SELECT gen_random_uuid()::text, '1db8c3e4af7b245fcadb2ae924ddaad742b5944c4adccdd23162a2e4ec1c1cd9', now(), '1_seguridad', now(), 1
+WHERE NOT EXISTS (
+    SELECT 1 FROM "_prisma_migrations" WHERE "migration_name" = '1_seguridad'
 );

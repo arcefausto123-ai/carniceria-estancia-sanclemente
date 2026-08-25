@@ -160,6 +160,11 @@ model Order {
   code   String      @unique // ESC-1048
   status OrderStatus @default(NEW)
 
+  // Los códigos son correlativos y por lo tanto adivinables. Este token
+  // aleatorio es lo que autoriza a ver el pedido sin iniciar sesión: sin
+  // él, conocer el número no alcanza.
+  publicToken String @unique @default(cuid())
+
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
 
@@ -365,6 +370,13 @@ model AdminUser {
   passwordHash String
   role         String   @default("admin")
   createdAt    DateTime @default(now())
+
+  // Se incrementa al cambiar la contraseña: invalida las sesiones abiertas.
+  sessionVersion Int @default(1)
+
+  // Freno a la fuerza bruta contra el login.
+  failedLogins Int       @default(0)
+  lockedUntil  DateTime?
 }
 
 model Counter {

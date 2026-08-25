@@ -1,7 +1,12 @@
 /** Serializa filas a CSV con BOM, para que Excel abra bien los acentos. */
 export function toCsv(headers: string[], rows: (string | number | null)[][]): string {
   const escape = (value: string | number | null) => {
-    const text = value === null || value === undefined ? "" : String(value);
+    let text = value === null || value === undefined ? "" : String(value);
+
+    // Un cliente podría llamarse `=HYPERLINK(...)` y Excel lo ejecutaría al
+    // abrir el archivo. La comilla simple lo fuerza a tratarlo como texto.
+    if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+
     return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
   const lines = [headers, ...rows].map((row) => row.map(escape).join(";"));
