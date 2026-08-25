@@ -163,7 +163,9 @@ model Order {
   // Los códigos son correlativos y por lo tanto adivinables. Este token
   // aleatorio es lo que autoriza a ver el pedido sin iniciar sesión: sin
   // él, conocer el número no alcanza.
-  publicToken String @unique @default(cuid())
+  // El valor lo pone la base, no el cliente: así funciona aunque el INSERT
+  // venga de una versión de la aplicación que todavía no conoce la columna.
+  publicToken String @unique @default(dbgenerated("(replace((gen_random_uuid())::text, '-'::text, ''::text) || replace((gen_random_uuid())::text, '-'::text, ''::text))"))
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])

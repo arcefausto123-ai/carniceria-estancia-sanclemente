@@ -42,6 +42,11 @@ CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
 ${rows
   .map(
     (row) => `
+-- Si ya estaba registrada pero cambió el archivo, corregimos el checksum.
+UPDATE "_prisma_migrations"
+   SET "checksum" = '${row.checksum}'
+ WHERE "migration_name" = '${row.name}' AND "checksum" <> '${row.checksum}';
+
 INSERT INTO "_prisma_migrations" (
     "id", "checksum", "finished_at", "migration_name", "started_at", "applied_steps_count"
 )

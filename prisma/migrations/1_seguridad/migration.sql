@@ -5,14 +5,21 @@
 -- este token, cualquiera podía recorrerlos y leer nombre, teléfono,
 -- dirección y datos de pago de todos los clientes.
 --
--- Se agrega en tres pasos para no romper si ya hay pedidos cargados:
--- primero nullable, después se completan los existentes, y recién ahí
--- se marca NOT NULL.
+-- Se agrega en cuatro pasos para no cortar el servicio. Prisma genera el
+-- token del lado del cliente, así que la versión anterior de la aplicación
+-- no lo enviaría al insertar: por eso la columna lleva además un valor por
+-- defecto en la base, y así las dos versiones del código funcionan mientras
+-- dure el despliegue.
 
 ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "publicToken" TEXT;
 
 -- gen_random_uuid() viene con Postgres desde la 13; gen_random_bytes
 -- necesitaría la extensión pgcrypto, que no está en todas las instalaciones.
+ALTER TABLE "Order"
+  ALTER COLUMN "publicToken"
+  SET DEFAULT replace(gen_random_uuid()::text, '-', '')
+           || replace(gen_random_uuid()::text, '-', '');
+
 UPDATE "Order"
    SET "publicToken" = replace(gen_random_uuid()::text, '-', '')
                     || replace(gen_random_uuid()::text, '-', '')
