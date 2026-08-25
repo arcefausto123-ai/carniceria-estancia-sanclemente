@@ -646,13 +646,18 @@ function MessageRule({
   return (
     <div className="rounded-lg border border-ink-200 p-4">
       <Switch name={toggleName} checked={checked} onChange={onToggle} label={title} hint={hint} />
+      {/* readOnly y no disabled: un campo deshabilitado no se envía con el
+          formulario, así que apagar el aviso borraba la plantilla guardada. */}
       <textarea
         name={textName}
         rows={2}
         value={value}
         onChange={(event) => onChangeText(event.target.value)}
-        disabled={!checked}
-        className="admin-field mt-2 resize-y disabled:bg-ink-100 disabled:text-ink-500"
+        readOnly={!checked}
+        aria-disabled={!checked}
+        className={`admin-field mt-2 resize-y ${
+          checked ? "" : "bg-ink-100 text-ink-500"
+        }`}
       />
     </div>
   );
